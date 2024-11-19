@@ -5,9 +5,18 @@ Compliments Results
 {% endblock %}
 
 {% block content %}
+<h1> Hello, {{ user_name }}!</h1>
 
-<!-- Your HTML code goes here! -->
-
+    {% if wants_compliments %}
+        <h2>Here are some compliments just for you:</h2>
+        <ul>
+            {% for compliment in compliments %}
+                <li>{{ compliment }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No compliments? No Problem! Have a fantastic day, {{ user_name }}!</p>
+    {% endif %}
 
 
 {% endblock %}
