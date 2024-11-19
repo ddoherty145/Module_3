@@ -117,7 +117,6 @@ def save_image(image, filter_type):
     # Append the filter type at the beginning (in case the user wants to 
     # apply multiple filters to 1 image, there won't be a name conflict)
     new_file_name = f"{filter_type}-{image.filename}"
-    image.filename = new_file_name
 
     # Construct full file path
     file_path = os.path.join(app.root_path, 'static/images', new_file_name)
@@ -130,44 +129,40 @@ def save_image(image, filter_type):
 
 def apply_filter(file_path, filter_name):
     """Apply a Pillow filter to a saved image."""
-    i = Image.open(file_path)
-    i.thumbnail((500, 500))
-    i = i.filter(filter_types_dict.get(filter_name))
-    i.save(file_path)
+    image = Image.open(file_path)
+    image.thumbnail((500, 500))
+    image = image.filter(filter_types_dict.get(filter_name))
+    image.save(file_path)
 
 @app.route('/image_filter', methods=['GET', 'POST'])
 def image_filter():
     """Filter an image uploaded by the user, using the Pillow library."""
     filter_types = filter_types_dict.keys()
+    image_url = None
 
     if request.method == 'POST':
         
-        # TODO: Get the user's chosen filter type (whichever one they chose in the form) and save
-        # as a variable
-        # HINT: remember that we're working with a POST route here so which requests function would you use?
-        filter_type = ''
+        filter_type = request.form.get('filter_type')
         
         # Get the image file submitted by the user
         image = request.files.get('users_image')
+        
+        if image and filter_type:
+            file_path = save_image(image, filter_type)
+            apply_filter(file_path, filter_type)
 
-        # TODO: call `save_image()` on the image & the user's chosen filter type, save the returned
-        # value as the new file path
-
-        # TODO: Call `apply_filter()` on the file path & filter type
-
-        image_url = f'./static/images/{image.filename}'
+            image_url = f'static/images{filter_type}-{image.filename}'
 
         context = {
-            # TODO: Add context variables here for:
-            # - The full list of filter types
-            # - The image URL
+            'filter_types': filter_types,
+            'image_url': image_url
         }
 
         return render_template('image_filter.html', **context)
 
     else: # if it's a GET request
         context = {
-            # TODO: Add context variable here for the full list of filter types
+            'filter_types': filter_types
         }
         return render_template('image_filter.html', **context)
 
@@ -205,32 +200,28 @@ pp = PrettyPrinter(indent=4)
 def gif_search():
     """Show a form to search for GIFs and show resulting GIFs from Tenor API."""
     if request.method == 'POST':
-        # TODO: Get the search query & number of GIFs requested by the user, store each as a 
-        # variable
+        search_query = request.form.get('search_query')
+        num_gifs = int(request.form.get('quantity'))
 
-        response = requests.get(
-            TENOR_URL,
-            {
-                # TODO: Add in key-value pairs for:
-                # - 'q': the search query
-                # - 'key': the API key (defined above)
-                #- 'client_key': 'Your project name',
-                # - 'limit': the number of GIFs requested
-            })
+
+        url = 'https://tenor.googleapis.com/v2/search'
+
+        params = {
+            'q': search_query,
+            'key': API_KEY,
+            'limit': num_gifs
+        }
+
+        response = requests.get(url, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            gifs = data.get('results', [])
 
         gifs = json.loads(response.content).get('results')
 
         context = {
             'gifs': gifs
         }
-
-         # Uncomment me to see the result JSON!
-        # Look closely at the response! It's a list
-        # list of data. The media property contains a 
-        # list of media objects. Get the gif and use it's 
-        # url in your template to display the gif. 
-        # pp.pprint(gifs)
-
         return render_template('gif_search.html', **context)
     else:
         return render_template('gif_search.html')

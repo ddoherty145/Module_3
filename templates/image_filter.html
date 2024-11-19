@@ -13,18 +13,16 @@ Image Filtering
         <p>
             <label>
                 Upload a file here (of file type .jpeg, .jpg, or .gif):
-
                 <input type="file" name="users_image" accept="image/png, image/jpeg, image/gif">
             </label>
         </p>
         <p>
             <label>
                 Select your filter:
-
                 <select name="filter_type">
-                    <!-- TODO: Use a for loop to display an option element for each possible filter 
-                        type-->
-                    <option value="blur">blur</option>
+                    {% for filter in filter_types %}
+                    <option value="{{ filter }}">{{ filter }}</option>
+                    {% endfor %}
                 </select>
             </label>
         </p>
@@ -39,7 +37,7 @@ Image Filtering
         Here is your filtered image:
     </p>
     <p>
-        <!-- TODO: Display the filtered image using the img tag and the URL passed in -->
+        <img src="{{ image_url }}" alt="Flitered Image">
     </p>
 </section>
 {% endif %}
